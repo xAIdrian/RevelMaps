@@ -6,12 +6,12 @@ data class VehiclesResponse(
 
 data class Vehicle(
     val id: String = "",
-    val licensePlat: String = "",
+    val licensePlate: String = "",
     val sensors: Sensors?
 )
 
 data class Sensors(
     val lat: Double = 0.0,
     val lng: Double = 0.0,
-    val batteryLevel: Int
+    val batteryLevel: Double = 0.0
 )

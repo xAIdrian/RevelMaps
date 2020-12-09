@@ -1,7 +1,9 @@
 package com.reveltransit.takehome.main
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapView
@@ -32,6 +34,11 @@ class MainActivity : AppCompatActivity() {
         mapView.onCreate(savedInstanceState)
 
         initMapView(mapView)
+
+        viewModel.getVehicles()
+        viewModel.vehicleMutableLiveData.observe(this, Observer {
+            Log.e("pooper temp", it.size.toString())
+        })
     }
 
     private fun initMapView(mapView: MapView) {

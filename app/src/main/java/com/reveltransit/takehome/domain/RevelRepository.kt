@@ -1,6 +1,7 @@
 package com.reveltransit.takehome.domain
 
-import androidx.annotation.RawRes
+import android.util.Log
+import com.google.gson.Gson
 import com.reveltransit.takehome.R
 import com.reveltransit.takehome.helper.ResourceProvider
 import com.reveltransit.takehome.model.VehiclesResponse
@@ -11,12 +12,23 @@ import javax.inject.Singleton
 class RevelRepository @Inject constructor(
     private val resourceProvider: ResourceProvider
 ) {
+    suspend fun fetchVehicles(): VehiclesResponse? {
+        val gson = Gson()
+        return try {
+            gson.fromJson(readVehiclesFromFile(), VehiclesResponse::class.java)
+        } catch (e: Exception) {
+            Log.e(TAG, e.message ?: "json exception with vehicle parse")
+            null
+        }
+    }
 
-//    fun fetchVehicles(): VehiclesResponse {
-//
-//    }
+    private fun readVehiclesFromFile() =
+        resourceProvider
+            .getRawResource(R.raw.upstream_vehicles)
+            .bufferedReader()
+            .readText()
 
-    fun readStringFromFile(@RawRes rawId: Int) {
-        val text = resourceProvider.getRawResourceAsString(R.raw.upstream_vehicles)
+    companion object {
+        private val TAG = RevelRepository::class.simpleName
     }
 }

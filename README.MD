@@ -44,5 +44,6 @@ We started things off with a basic setup in `MainActivity` and a vehicles respon
         
 ### Things I'd Do Next Time Around
 - With a larger application I would make more modular subcomponents and activity modules for dagger
+- Add additional caching infrastructure, checking to see if we already have converted file to objects and/or storing converted objects locally
 
 
