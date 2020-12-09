@@ -4,21 +4,22 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
-import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
+import com.mapbox.mapboxsdk.style.expressions.Expression.*
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import com.reveltransit.takehome.R
 import com.reveltransit.takehome.RevelApp
 import com.reveltransit.takehome.databinding.ActivityMainBinding
+import com.reveltransit.takehome.main.MainViewModel.Companion.FEATURE_KEY_LICENSE_PLATE
+import com.reveltransit.takehome.main.MainViewModel.Companion.FEATURE_KEY_RIDE_STATE
 import com.reveltransit.takehome.model.Vehicle
 import javax.inject.Inject
 
@@ -29,7 +30,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var symbolManager: SymbolManager
 
-    @Inject lateinit var viewModel: MainViewModel
+    @Inject
+    lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // in larger applications we'd put this in our base class
@@ -43,27 +45,62 @@ class MainActivity : AppCompatActivity() {
         mapView.onCreate(savedInstanceState)
 
         initMapView(mapView)
+        initButtonViews()
 
         viewModel.getVehicles()
         viewModel.vehicleMutableLiveData.observe(this, Observer {
-            addMarkersToMap(it)
+            addMarkerFeaturesToMap(it)
+        })
+        viewModel.itemClickEvent.observe(this, Observer {
+            when(it?.getProperty(FEATURE_KEY_RIDE_STATE)?.asString) {
+                Vehicle.PAUSED -> {
+                    binding.rideStatus.text = String.format(getString(R.string.status_format), Vehicle.PAUSED.capitalize())
+                    binding.rideButton.text = getString(R.string.start_ride)
+                    binding.rideButton.setBackgroundColor(getColor(R.color.goGreen))
+                }
+                Vehicle.RESERVED -> {
+                    binding.rideStatus.text = String.format(getString(R.string.status_format), Vehicle.RESERVED.capitalize())
+                    binding.alternateButton.text = getString(R.string.cancel_reservation)
+                    binding.alternateButton.setBackgroundColor(getColor(R.color.cancelReservationCyan))
+                }
+                Vehicle.RIDING -> {
+                    binding.rideStatus.text = String.format(getString(R.string.status_format), Vehicle.RIDING.capitalize())
+
+                    binding.rideButton.text = getString(R.string.paused)
+                    binding.alternateButton.text = getString(R.string.end)
+
+                    binding.rideButton.setBackgroundColor(getColor(R.color.pauseSky))
+                    binding.alternateButton.setBackgroundColor(getColor(R.color.endRed))
+                }
+                else -> {
+                    // this is null and our ride has ended
+                    binding.rideStatus.text = String.format(getString(R.string.status_format), getString(R.string.nah))
+
+                    binding.rideButton.text = getString(R.string.start_ride)
+                    binding.alternateButton.text = getString(R.string.reserve)
+
+                    binding.rideButton.setBackgroundColor(getColor(R.color.goGreen))
+                    binding.alternateButton.setBackgroundColor(getColor(R.color.reserveBlue))
+                }
+            }
         })
     }
 
-    private fun addMarkersToMap(vehicles: List<Vehicle>) {
-        val symbolLayerIconFeatureList: ArrayList<Feature> = ArrayList()
-        vehicles.forEach { vehicle ->
-            vehicle.sensors?.let {
-                symbolLayerIconFeatureList.add(
-                    Feature.fromGeometry(Point.fromLngLat(it.lng, it.lat))
-                )
-            }
+    private fun initButtonViews() {
+        binding.rideButton.setOnClickListener {
+            viewModel.startButtonClicked()
         }
+        binding.alternateButton.setOnClickListener {
+            viewModel.endButtonClicked()
+        }
+    }
+
+    private fun addMarkerFeaturesToMap(vehiclesMarkers: FeatureCollection) {
+
         mapView.getMapAsync { map ->
             map.getStyle { style ->
-                val featureCollection = FeatureCollection.fromFeatures(symbolLayerIconFeatureList)
                 val source = style.getSourceAs<GeoJsonSource>(SOURCE_ID)
-                source?.setGeoJson(featureCollection)
+                source?.setGeoJson(vehiclesMarkers)
             }
         }
     }
@@ -74,6 +111,22 @@ class MainActivity : AppCompatActivity() {
                 symbolManager = SymbolManager(mapView, map, style)
                 setupAnnotations(symbolManager)
                 initMarkerSymbolLayer(style)
+            }
+            map.addOnMapClickListener { point ->
+                if (viewModel.canClearOrPickNewFeature()) {
+                    val geoCoord = map.projection.toScreenLocation(point)
+                    val markerFeaturesList = map.queryRenderedFeatures(geoCoord, LAYER_ID)
+
+                    if (markerFeaturesList.isNotEmpty()) {
+                        val selectedFeature = markerFeaturesList[0]
+                        binding.rideId.text = selectedFeature.getStringProperty(FEATURE_KEY_LICENSE_PLATE)
+                        viewModel.updateClickedFeature(selectedFeature)
+                    } else {
+                        binding.rideId.text = getString(R.string.no_rides)
+                        viewModel.updateClickedFeature(null)
+                    }
+                }
+                true
             }
         }
     }
@@ -89,16 +142,24 @@ class MainActivity : AppCompatActivity() {
                 .withProperties(
                     iconImage(ICON_ID),
                     iconAllowOverlap(true),
-                    iconIgnorePlacement(true)
+                    iconIgnorePlacement(true),
+                    iconColor(
+                        match(
+                            get(FEATURE_KEY_RIDE_STATE), rgb(0, 0, 0),
+                            stop(Vehicle.RESERVED, R.color.colorPrimaryDark),
+                            stop(Vehicle.PAUSED, R.color.colorPrimary),
+                            stop(Vehicle.RIDING, R.color.colorAccent)
+                        )
+                    )
                 )
         )
     }
 
     private fun setupAnnotations(manager: SymbolManager) {
         val options = SymbolOptions()
-                .withLatLng(LatLng(40.6677759, -74.0122655))
-                .withIconImage("rocket-15")
-                .withIconSize(1.5f)
+            .withLatLng(LatLng(40.6677759, -74.0122655))
+            .withIconImage("rocket-15")
+            .withIconSize(1.5f)
         manager.create(options)
     }
 

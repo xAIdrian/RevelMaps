@@ -15,4 +15,67 @@
         app:mapbox_cameraZoom="12"
         />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:background="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:clipToPadding="false"
+        android:elevation="16dp">
+
+        <TextView
+            android:id="@+id/ride_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textSize="18sp"
+            android:text="@string/no_rides"
+            android:textStyle="bold"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/ride_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textSize="14sp"
+            android:text="Status : N/A"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ride_id" />
+        
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ride_status"
+            app:layout_constraintBottom_toBottomOf="parent">
+            
+            <Button
+                android:id="@+id/ride_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:text="@string/start_ride"
+                android:background="@color/goGreen"
+                android:textColor="@android:color/white"
+                app:layout_constraintWidth_percent="0.5" />
+
+            <Button
+                android:id="@+id/alternate_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:text="@string/reserve"
+                android:textColor="@android:color/white"
+                android:background="@color/reserveBlue"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintWidth_percent="0.5" />
+            
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
