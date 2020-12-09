@@ -1,7 +1,9 @@
 package com.reveltransit.takehome.main
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapView
@@ -9,16 +11,20 @@ import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.reveltransit.takehome.R
+import com.reveltransit.takehome.RevelApp
 import com.reveltransit.takehome.databinding.ActivityMainBinding
+import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val mapView by lazy { binding.mapView }
     private lateinit var symbolManager: SymbolManager
 
+    @Inject lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // in larger applications we'd put this in our base class
+        (applicationContext as RevelApp).appComponent.inject(this)
         super.onCreate(savedInstanceState)
 
         Mapbox.getInstance(this, getString(R.string.mapbox_access_token))
@@ -28,6 +34,11 @@ class MainActivity : AppCompatActivity() {
         mapView.onCreate(savedInstanceState)
 
         initMapView(mapView)
+
+        viewModel.getVehicles()
+        viewModel.vehicleMutableLiveData.observe(this, Observer {
+            Log.e("pooper temp", it.size.toString())
+        })
     }
 
     private fun initMapView(mapView: MapView) {
