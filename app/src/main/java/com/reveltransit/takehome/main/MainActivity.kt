@@ -1,10 +1,11 @@
 package com.reveltransit.takehome.main
 
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import com.mapbox.geojson.Feature
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.Style
@@ -13,7 +14,9 @@ import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.reveltransit.takehome.R
 import com.reveltransit.takehome.RevelApp
 import com.reveltransit.takehome.databinding.ActivityMainBinding
+import com.reveltransit.takehome.model.Vehicle
 import javax.inject.Inject
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -37,8 +40,23 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.getVehicles()
         viewModel.vehicleMutableLiveData.observe(this, Observer {
-            Log.e("pooper temp", it.size.toString())
+            addMarkersToMap(mapView, it)
         })
+    }
+
+    private fun addMarkersToMap(
+        mapView: MapView,
+        vehicles: List<Vehicle>
+    ) {
+        val markerList: ArrayList<MarkerOptions> = ArrayList()
+        vehicles.forEach { vehicle ->
+            vehicle.sensors?.let {
+                    markerList.add(MarkerOptions().position(LatLng(it.lat, it.lng)))
+            }
+        }
+        mapView.getMapAsync { map ->
+            map.addMarkers(markerList)
+        }
     }
 
     private fun initMapView(mapView: MapView) {
@@ -92,5 +110,10 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         mapView.onDestroy()
+    }
+
+    companion object {
+        private const val SOURCE_ID = "GEO_SOURCE_ID"
+        private const val LAYER_ID = "GEO_LAYER_ID"
     }
 }

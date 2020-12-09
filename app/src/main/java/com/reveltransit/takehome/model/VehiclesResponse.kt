@@ -7,7 +7,8 @@ data class VehiclesResponse(
 data class Vehicle(
     val id: String = "",
     val licensePlate: String = "",
-    val sensors: Sensors?
+    val sensors: Sensors?,
+    val rideState: VehicleRideState = VehicleRideState.OPEN
 )
 
 data class Sensors(
@@ -15,3 +16,10 @@ data class Sensors(
     val lng: Double = 0.0,
     val batteryLevel: Double = 0.0
 )
+
+enum class VehicleRideState {
+    OPEN,
+    RESERVED,
+    PAUSED,
+    RIDING
+}
