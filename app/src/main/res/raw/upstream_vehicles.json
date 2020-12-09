@@ -1,0 +1,67 @@
+{
+  "vehicles": [
+    {
+      "id": "00001",
+      "licensePlate": "NY00001",
+      "sensors": {
+        "lat": 40.668867,
+        "lng": -73.958625,
+        "batteryLevel": 42.5
+      }
+    },
+    {
+      "id": "00002",
+      "licensePlate": "NY00002",
+      "sensors": {
+        "lat": 40.672219252036065,
+        "lng": -74.00888559620489,
+        "batteryLevel": 94
+      }
+    },
+    {
+      "id": "00004",
+      "licensePlate": "NY00004",
+      "sensors": {
+        "lat": 40.666613,
+        "lng": -73.983562,
+        "batteryLevel": 44
+      }
+    },
+    {
+      "id": "00006",
+      "licensePlate": "NY00006",
+      "sensors": {
+        "lat": 40.684574,
+        "lng": -73.976922,
+        "batteryLevel": 100
+      }
+    },
+    {
+      "id": "00007",
+      "licensePlate": "NY00007",
+      "sensors": {
+        "lat": 40.684574,
+        "lng": -73.997121,
+        "batteryLevel": 90
+      }
+    },
+    {
+      "id": "00008",
+      "licensePlate": "NY00008",
+      "sensors": {
+        "lat": 40.681426,
+        "lng": -73.976922,
+        "batteryLevel": 82
+      }
+    },
+    {
+      "id": "00010",
+      "licensePlate": "NY00010",
+      "sensors": {
+        "lat": 40.666613,
+        "lng": -73.999041,
+        "batteryLevel": 85
+      }
+    }
+  ]
+}
