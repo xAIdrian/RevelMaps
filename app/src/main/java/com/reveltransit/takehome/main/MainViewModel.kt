@@ -1,22 +1,22 @@
 package com.reveltransit.takehome.main
 
-import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.reveltransit.takehome.dagger.ActivityScope
 import com.reveltransit.takehome.domain.RevelRepository
 import com.reveltransit.takehome.google.SingleLiveEvent
 import com.reveltransit.takehome.model.Vehicle
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@ActivityScope
 class MainViewModel @Inject constructor(
     private val revelRepository: RevelRepository
 ): ViewModel() {
-
     val vehicleMutableLiveData = MutableLiveData<FeatureCollection>()
     val itemClickEvent = SingleLiveEvent<Feature>()
 
@@ -42,11 +42,16 @@ class MainViewModel @Inject constructor(
         )
         feature.addStringProperty(FEATURE_KEY_ID, vehicle.id)
         feature.addStringProperty(FEATURE_KEY_LICENSE_PLATE, vehicle.licensePlate)
+        feature.addBooleanProperty(FEATURE_KEY_SELECTED, false)
 
         return feature
     }
 
     fun updateClickedFeature(clickedFeature: Feature?) {
+        clickedFeature?.addBooleanProperty(
+            FEATURE_KEY_SELECTED,
+            !clickedFeature.getBooleanProperty(FEATURE_KEY_SELECTED)
+        )
         selectedFeature = clickedFeature
     }
 
@@ -95,5 +100,6 @@ class MainViewModel @Inject constructor(
         const val FEATURE_KEY_ID = "id"
         const val FEATURE_KEY_LICENSE_PLATE = "licensePlate"
         const val FEATURE_KEY_RIDE_STATE = "rideState"
+        const val FEATURE_KEY_SELECTED = "selected"
     }
 }

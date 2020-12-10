@@ -2,6 +2,7 @@ package com.reveltransit.takehome.main
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.mapbox.geojson.FeatureCollection
@@ -11,7 +12,9 @@ import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
-import com.mapbox.mapboxsdk.style.expressions.Expression.*
+import com.mapbox.mapboxsdk.style.expressions.Expression.eq
+import com.mapbox.mapboxsdk.style.expressions.Expression.get
+import com.mapbox.mapboxsdk.style.layers.Property.ICON_ANCHOR_BOTTOM
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
@@ -20,6 +23,7 @@ import com.reveltransit.takehome.RevelApp
 import com.reveltransit.takehome.databinding.ActivityMainBinding
 import com.reveltransit.takehome.main.MainViewModel.Companion.FEATURE_KEY_LICENSE_PLATE
 import com.reveltransit.takehome.main.MainViewModel.Companion.FEATURE_KEY_RIDE_STATE
+import com.reveltransit.takehome.main.MainViewModel.Companion.FEATURE_KEY_SELECTED
 import com.reveltransit.takehome.model.Vehicle
 import javax.inject.Inject
 
@@ -29,6 +33,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var symbolManager: SymbolManager
+    private val viewMap: HashMap<String?, View?>? = HashMap()
 
     @Inject
     lateinit var viewModel: MainViewModel
@@ -96,7 +101,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addMarkerFeaturesToMap(vehiclesMarkers: FeatureCollection) {
-
         mapView.getMapAsync { map ->
             map.getStyle { style ->
                 val source = style.getSourceAs<GeoJsonSource>(SOURCE_ID)
@@ -111,6 +115,7 @@ class MainActivity : AppCompatActivity() {
                 symbolManager = SymbolManager(mapView, map, style)
                 setupAnnotations(symbolManager)
                 initMarkerSymbolLayer(style)
+                initImageCalloutLayer(style)
             }
             map.addOnMapClickListener { point ->
                 if (viewModel.canClearOrPickNewFeature()) {
@@ -131,6 +136,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initImageCalloutLayer(style: Style) {
+        style.addLayer(
+            SymbolLayer(CALLOUT_LAYER_ID, SOURCE_ID)
+                .withProperties(
+                    iconImage("{title}"),
+                    iconAnchor(ICON_ANCHOR_BOTTOM),
+                    iconAllowOverlap(true)
+                ).withFilter(eq(get(FEATURE_KEY_SELECTED), true))
+        )
+    }
+
     private fun initMarkerSymbolLayer(style: Style) {
         style.addImage(
             ICON_ID,
@@ -142,15 +158,7 @@ class MainActivity : AppCompatActivity() {
                 .withProperties(
                     iconImage(ICON_ID),
                     iconAllowOverlap(true),
-                    iconIgnorePlacement(true),
-                    iconColor(
-                        match(
-                            get(FEATURE_KEY_RIDE_STATE), rgb(0, 0, 0),
-                            stop(Vehicle.RESERVED, R.color.colorPrimaryDark),
-                            stop(Vehicle.PAUSED, R.color.colorPrimary),
-                            stop(Vehicle.RIDING, R.color.colorAccent)
-                        )
-                    )
+                    iconIgnorePlacement(true)
                 )
         )
     }
@@ -202,5 +210,6 @@ class MainActivity : AppCompatActivity() {
         private const val ICON_ID = "DEFAULT_ICON_ID"
         private const val SOURCE_ID = "GEO_SOURCE_ID"
         private const val LAYER_ID = "GEO_LAYER_ID"
+        private const val CALLOUT_LAYER_ID = "CALLOUT_LAYER_ID"
     }
 }
